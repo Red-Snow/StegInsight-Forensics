@@ -8,6 +8,13 @@
 ## 🚀 Live Environment
 **[ACCESS LIVE FORENSIC CONSOLE HERE](https://Red-Snow.github.io/StegInsight-Forensics)**
 
+### 🛠️ Neural Analysis Initialization
+To unlock high-level semantic data reconstruction and AI-driven threat verdicts, follow these authorization steps:
+1.  **Access Authentication Vault:** Click the **SET-AUTH** (Yellow) button located in the top-right application header.
+2.  **Provision Credentials:** If you lack a Gemini API credentials, use the provided link to generate a free API key via [Google AI Studio](https://aistudio.google.com/app/apikey).
+3.  **Client-Side Security:** Input your key into the secure vault. **Security Note:** Keys are stored exclusively in your browser's local state and are never transmitted to repository maintainers or external logging services.
+4.  **Confirm Status:** Once the header status transitions to **ENCRYPTED** (Green), the neural engine is active and ready for object analysis.
+
 ---
 
 ## 🛠️ Forensic Capabilities
