@@ -1,6 +1,10 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * Developed by Farman Khan (Red-Snow)
+ * GitHub: https://github.com/Red-Snow
+ * Email: FarmanKhan001@gmail.com
  */
 
 import React, { useState, useRef, useCallback } from 'react';
@@ -23,7 +27,10 @@ import {
   Zap,
   Key,
   Database,
-  Lock
+  Lock,
+  Github,
+  Mail,
+  User
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -694,7 +701,42 @@ export default function App() {
             </div>
           </section>
 
-          <section className="mt-auto hidden lg:block">
+          <section className="mt-auto hidden lg:block border-t border-brand-border pt-6">
+            <h2 className="text-[11px] uppercase tracking-[1.5px] text-brand-text-s mb-4 flex items-center gap-2">
+              <User size={14} /> DEVELOPER PROFILE
+            </h2>
+            <div className="bg-brand-bg rounded-xl p-4 border border-brand-accent/20 relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-20 h-20 bg-brand-accent/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
+               <div className="relative z-10">
+                 <p className="text-[13px] font-bold text-brand-text-p uppercase tracking-tighter">Farman Khan</p>
+                 <p className="text-[9px] text-brand-accent uppercase font-mono mb-3 tracking-[2px]">Digital Forensic Architect</p>
+                 
+                 <div className="flex gap-4">
+                    <a 
+                      href="https://github.com/Red-Snow" 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-brand-text-s hover:text-brand-accent transition-colors"
+                      title="GitHub Profile"
+                    >
+                      <Github size={16} />
+                    </a>
+                    <a 
+                      href="mailto:FarmanKhan001@gmail.com" 
+                      className="text-brand-text-s hover:text-brand-accent transition-colors"
+                      title="Send Email"
+                    >
+                      <Mail size={16} />
+                    </a>
+                 </div>
+               </div>
+            </div>
+            <p className="text-[8px] text-brand-text-s mt-3 uppercase tracking-tighter opacity-50 px-1">
+               Engineered with Precision © 2026
+            </p>
+          </section>
+
+          <section className="hidden lg:block">
             <h2 className="text-[11px] uppercase tracking-[1.5px] text-brand-text-s mb-3">MODUS OPERANDI / DETECTION ENGINE</h2>
             <div className="space-y-2">
               {[

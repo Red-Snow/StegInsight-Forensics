@@ -1,70 +1,85 @@
 # STEGINSIGHT FORENSICS 🛡️
-### Advanced Neural Steganalysis & Digital Forensic Engine
+### Professional Neural Steganalysis & Digital Forensic Engine
 
-**StegInsight** is a professional-grade digital forensics tool designed for deep-packet inspection of steganographic carriers. Built using TypeScript and React, it utilizes high-entropy vectoring, Chi-Square statistical probability, and neural-inspired heuristics to identify hidden payloads within images, audio, video, and documents.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![React](https://img.shields.io/badge/Frontend-React%2018-cyan.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![AI-Powered](https://img.shields.io/badge/AI-Gemini%20Pro-orange.svg)](https://aistudio.google.com/)
 
----
-
-## 🚀 Live Environment
-**[ACCESS LIVE FORENSIC CONSOLE HERE](https://Red-Snow.github.io/StegInsight-Forensics)**
-
-### 🛠️ Neural Analysis Initialization
-To unlock high-level semantic data reconstruction and AI-driven threat verdicts, follow these authorization steps:
-1.  **Access Authentication Vault:** Click the **SET-AUTH** (Yellow) button located in the top-right application header.
-2.  **Provision Credentials:** If you lack a Gemini API credentials, use the provided link to generate a free API key via [Google AI Studio](https://aistudio.google.com/app/apikey).
-3.  **Client-Side Security:** Input your key into the secure vault. **Security Note:** Keys are stored exclusively in your browser's local state and are never transmitted to repository maintainers or external logging services.
-4.  **Confirm Status:** Once the header status transitions to **ENCRYPTED** (Green), the neural engine is active and ready for object analysis.
+**StegInsight** is a cutting-edge digital forensics platform designed for the high-fidelity detection and analysis of hidden data payloads. By fusing classical statistical probability with modern neural heuristics, StegInsight empowers investigators to uncover covert communication channels that bypass standard security audits.
 
 ---
 
-## 🛠️ Forensic Capabilities
-
-### 1. Neural Heuristics Engine
-Evaluates structural integrity across multiple MIME types to assign a **Likelihood of Infiltration** score.
-- **Header/Footer Scan:** Detects magic-byte anomalies and trailer appending.
-- **Shannon Entropy Vectoring:** Maps information density to identify encrypted containers.
-- **DeepSound Signature Detection:** Specifically targets audio-infused payloads.
-
-### 2. Advanced Visualizers
-- **Spatial Heatmaps:** Visualizes noise distribution in pixel data.
-- **LSB Bit-Plane Mapping:** Isolates the Least Significant Bit layers to find "snowy" patterns indicative of hidden data.
-- **Sliding Window Entropy:** A time-domain graph showing exactly where data density spikes (the "Smoking Gun").
-
-### 3. Professional reporting
-- **Standardized Forensic PDF:** Generates multi-page reports including Chain of Custody, Technical Metrics, AI-Driven Rationales, and Recommended Actions.
+## 🚀 Live Forensic Console
+Access the production-grade analysis environment directly in your browser:
+👉 **[LAUNCH STEGINSIGHT CONSOLE](https://Red-Snow.github.io/StegInsight-Forensics)**
 
 ---
 
-## 🧩 Technical Deep Dive
+## 💎 Core Forensic Pillars
 
-### Detection Algorithms Used:
-- **Chi-Square Test (First-Order Statistics):** Checks if pixel values follow a natural distribution or if they've been tampered with to store information.
-- **Shannon Entropy (H):** Measures the randomness of bytes. Values near 8.0 in carrier trailers suggest encrypted volumes (e.g., OpenPuff, VeraCrypt).
-- **Bit-Plane Slicing:** Extracts and greyscales individual bits from the color channels.
+### 🧠 Neural Intelligence Layer (Gemini-Powered)
+Unlike static scanners, StegInsight utilizes the **Gemini 1.5 Pro** engine to provide a semantic threat verdict. 
+*   **Contextual Rationale:** Deep-segment analysis of byte-level anomalies.
+*   **Automated Toolchain Logic:** Suggests exact commands for secondary extraction (e.g., `stegseek`, `binwalk`).
+*   **Heuristic Risk Scoring:** Real-time probability mapping of infiltration status.
+
+### 📊 Deep-Packet Analytics
+*   **Shannon Entropy Mapping:** Visualizes localized information density to pinpoint encrypted volumes (e.g., VeraCrypt heads).
+*   **Chi-Square Probability Distribution:** Detects non-random bit manipulation in LSB planes.
+*   **Magic-Byte Anchor Scanning:** Identifies structural mismatches and trailer/header appending attacks (JPEG EOF anomalies).
+
+### 👁️ Visual Evidence Suite
+*   **Spatial Heatmaps:** Maps bit-level noise distribution.
+*   **Bit-Plane Slicing (0-7):** Isolates individual LSB layers to reveal hidden spatial patterns.
+*   **Audio/Video Heuristics:** Targets specialized containers like DeepSound or MP4 atom appending.
 
 ---
 
-## 💻 Developer Setup
+## 📑 Methodology & Logic
 
-1. **Clone & Install:**
-   ```bash
-   git clone https://github.com/Red-Snow/StegInsight-Forensics.git
-   cd StegInsight-Forensics
-   npm install
-   ```
+| Methodology | Purpose | Technical Indicator |
+| :--- | :--- | :--- |
+| **Entropy Vectoring** | Payload Density | H > 7.9 (Compressed/Encrypted) |
+| **LSB Slicing** | Masking Detection | Snowy spatial noise in Plane 0 |
+| **Chi-Square Test** | Bit Frequency | p-value skew in natural distribution |
+| **Neural Vault** | Semantic Verdict | AI-driven threat classification |
 
-2. **Environment Configuration:**
-   Create a `.env` file and add your Gemini API key for the Forensic AI module:
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   ```
+---
 
-3. **Run Console:**
-   ```bash
-   npm run dev
-   ```
+## 👤 Project Author
+
+**Farman Khan (Red-Snow)**
+*Digital Forensic Specialist & Full-Stack Architect*
+
+> "Building digital shields for an era of hidden threats."
+
+[![GitHub](https://img.shields.io/badge/GitHub-Red--Snow-lightgrey?logo=github)](https://github.com/Red-Snow)
+[![Email](https://img.shields.io/badge/Email-FarmanKhan001%40gmail.com-red?logo=gmail)](mailto:FarmanKhan001@gmail.com)
+
+---
+
+## 🛠️ Developer Installation
+
+1.  **Clone & Install:**
+    ```bash
+    git clone https://github.com/Red-Snow/StegInsight-Forensics.git
+    cd StegInsight-Forensics
+    npm install
+    ```
+
+2.  **AI Authentication:**
+    Create a `.env` file in the root directory:
+    ```env
+    GEMINI_API_KEY=your_api_key_here
+    ```
+
+3.  **Deploy Local Console:**
+    ```bash
+    npm run dev
+    ```
 
 ---
 
 ## ⚖️ License
-Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+Licensed under **Apache 2.0**. See the [LICENSE](./LICENSE) file for more details.

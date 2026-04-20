@@ -1,3 +1,8 @@
+/**
+ * Developed by Farman Khan (Red-Snow)
+ * GitHub: https://github.com/Red-Snow
+ */
+
 import { AnalysisResult, Finding } from '../types';
 
 export const PNG_FOOTER = [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]; 
