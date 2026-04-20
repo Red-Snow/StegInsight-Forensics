@@ -50,7 +50,7 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
     findings.push({
       type: 'warning',
       message: 'Statistical anomaly detected (Chi-Squared)',
-      details: `LSB distribution appears non-random (p=${chiSquaredResult.toFixed(4)}), suggestive of structured hidden data.`
+      details: `LSB distribution appears non-random (p=${chiSquaredResult.toFixed(4)}), suggestive of structured hidden data. RECOMMENDED ACTION: Use 'zsteg' for LSB extraction or 'stegoveritas' for multi-method analysis.`
     });
     likelihood += 25;
   }
@@ -68,14 +68,14 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
           findings.push({
             type: 'critical',
             message: 'Steghide Graph-Theoretic Masking',
-            details: `High payload density (H>7.9) with surprisingly normal first-order statistics (p<0.1) in a supported carrier strongly indicates Steghide usage.`
+            details: `High payload density (H>7.9) with surprisingly normal first-order statistics (p<0.1) in a supported carrier strongly indicates Steghide usage. RECOMMENDED ACTION: Attempt cracking with 'stegseek' or 'steghide --extract'.`
           });
           likelihood += 65;
       } else {
           findings.push({
             type: 'warning',
             message: 'Possible Steghide Target',
-            details: `Format and density align with Steghide profiles, though statistical preservation is imperfect.`
+            details: `Format and density align with Steghide profiles, though statistical preservation is imperfect. RECOMMENDED ACTION: Verify with 'stegseek' dictionary attack.`
           });
           likelihood += 30;
       }
@@ -148,7 +148,7 @@ function checkTrailingData(bytes: Uint8Array, mimeType: string, findings: Findin
     findings.push({
       type: 'critical',
       message: `Carrier anomaly: ${formatSize(extra)} trailing bytes detected`,
-      details: `Data was found after the expected end-of-file marker at offset 0x${(footerPos + footerLen).toString(16)}.`
+      details: `Data was found after the expected end-of-file marker at offset 0x${(footerPos + footerLen).toString(16)}. RECOMMENDED ACTION: Extract using 'binwalk -e' or 'foremost'.`
     });
     score += 50;
   }
@@ -417,7 +417,26 @@ export function extractPayload(bytes: Uint8Array, mimeType: string): Uint8Array 
     return bytes.slice(footerPos + footerLen);
   }
   
-  // If no explicit footer found but likelihood was high, we might want to check for other markers
+  // Signature-based extraction
+  const signatures = [
+    { sig: [0x5B, 0x4F, 0x75, 0x74, 0x47, 0x75, 0x65, 0x73, 0x73, 0x5D], name: 'OutGuess' }, // [OutGuess]
+    { sig: [0x4A, 0x50, 0x48, 0x49, 0x44, 0x45], name: 'JPHide' }, // JPHIDE
+    { sig: [0x44, 0x65, 0x65, 0x70, 0x53, 0x6f, 0x75, 0x6e, 0x64], name: 'DeepSound' } // DeepSound
+  ];
+
+  for (const item of signatures) {
+    const pos = findSequence(bytes, item.sig);
+    if (pos !== -1) {
+      // Return everything from the signature onwards as potential payload for forensic processing
+      return bytes.slice(pos);
+    }
+  }
+  
+  // If no explicit footer found but likelihood was high, check for high-entropy tails
+  if (calculateEntropy(bytes.slice(-2048)) > 7.9) {
+      return bytes.slice(-2048);
+  }
+
   return null;
 }
 

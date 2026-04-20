@@ -450,8 +450,9 @@ export default function App() {
         [A detailed, 3-4 sentence paragraph deeply explaining the technical vector. You MUST natively synthesize the Information Density (Entropy), the Chi-Square distributions, and exact DUMP Hex strings (if an anomaly is flagged) into a coherent technical hypothesis.]
 
         RECOMMENDATIONS:
-        - [Forensic command/step 1 (e.g. executing binwalk, foremost, or Zsteg spatial extractions)]
-        - [Forensic command/step 2]
+        - [Specific RECOMMENDED ACTION 1: e.g. "Execute 'stegseek --seed ...' on the carrier"]
+        - [Specific RECOMMENDED ACTION 2: e.g. "Run 'binwalk -e' to extract the identified 0xDEADBEEF offset"]
+        - [Forensic tool suggestion: e.g. "Utilize 'zsteg -a' for spatial LSB plane inspection"]
       `;
 
       const response = await ai.models.generateContent({
@@ -1026,8 +1027,11 @@ export default function App() {
               <div className="opacity-50 tracking-tighter">[CORE]: Initialize_v4.2.0... OK</div>
               {analyzing && <div className="animate-pulse text-brand-accent">[TASK]: Performing Deep Packet Inspection...</div>}
               {result?.findings.map((f, i) => (
-                <div key={i} className={f.type === 'critical' ? 'text-brand-danger font-bold' : f.type === 'warning' ? 'text-brand-warning' : 'text-brand-success'}>
-                  [{f.type.toUpperCase()}]: {f.message}
+                <div key={i} className="mb-2 border-l border-brand-border pl-2 py-1">
+                  <div className={f.type === 'critical' ? 'text-brand-danger font-bold uppercase' : f.type === 'warning' ? 'text-brand-warning uppercase' : 'text-brand-success uppercase'}>
+                    [{f.type.toUpperCase()}]: {f.message}
+                  </div>
+                  {f.details && <div className="text-[9px] text-brand-text-s leading-snug mt-0.5 opacity-80">{f.details}</div>}
                 </div>
               ))}
               
