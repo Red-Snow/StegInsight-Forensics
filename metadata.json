@@ -1,5 +1,5 @@
 {
-  "name": "StegInsight",
+  "name": "StegInsight Forensics",
   "description": "Professional steganography detection tool for analyzing text, images, and audio/video files for hidden embedded data.",
   "requestFramePermissions": [],
   "majorCapabilities": []
