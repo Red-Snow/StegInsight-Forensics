@@ -1,7 +1,7 @@
 {
   "name": "steginsight-forensics",
   "private": true,
-  "homepage": "https://Red-Snow.github.io/steginsight-forensics",
+  "homepage": "https://Red-Snow.github.io/StegInsight-Forensics",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

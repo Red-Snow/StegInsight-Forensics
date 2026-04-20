@@ -6,7 +6,7 @@
 ---
 
 ## 🚀 Live Environment
-**[ACCESS LIVE FORENSIC CONSOLE HERE](https://Red-Snow.github.io/steginsight-forensics)**
+**[ACCESS LIVE FORENSIC CONSOLE HERE](https://Red-Snow.github.io/StegInsight-Forensics)**
 
 ---
 
@@ -41,8 +41,8 @@ Evaluates structural integrity across multiple MIME types to assign a **Likeliho
 
 1. **Clone & Install:**
    ```bash
-   git clone https://github.com/Red-Snow/steginsight-forensics.git
-   cd steginsight-forensics
+   git clone https://github.com/Red-Snow/StegInsight-Forensics.git
+   cd StegInsight-Forensics
    npm install
    ```
 
