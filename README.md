@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
 [![AI-Powered](https://img.shields.io/badge/AI-Gemini%20Pro-orange.svg)](https://aistudio.google.com/)
 
-**StegInsight** is a cutting-edge digital forensics platform designed for the high-fidelity detection and analysis of hidden data payloads. By fusing classical statistical probability with modern neural heuristics, StegInsight empowers investigators to uncover covert communication channels that bypass standard security audits.
+**StegInsight Forensics** is a cutting-edge digital forensics engine designed for the high-fidelity detection and analysis of hidden data payloads within digital carriers. By fusing classical statistical methodologies—such as Chi-Square probability distribution and Shannon Entropy mapping—with modern neural heuristics, the platform systematically identifies steganographic anomalies in images, audio, and video files that often bypass standard security protocols. Developed for professional investigators and cybersecurity researchers, StegInsight transforms complex byte-level data into clear forensic verdicts and actionable intelligence, providing a robust defense against sophisticated covert communication channels.
 
 ---
 

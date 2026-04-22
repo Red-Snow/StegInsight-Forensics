@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ExternalLink,
   Cpu,
+  X,
   RefreshCcw,
   Zap,
   Key,
@@ -73,6 +74,7 @@ export default function App() {
     return localStorage.getItem('steg_insight_api_key') || '';
   });
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [showPayloadModal, setShowPayloadModal] = useState(false);
 
   const [lsbPlanes, setLsbPlanes] = useState<string[]>([]);
   const [heatmap, setHeatmap] = useState<string | null>(null);
@@ -511,15 +513,9 @@ export default function App() {
       
       if (payload && payload.length > 0) {
         setPayloadPreview(payload);
-        const blob = new Blob([payload], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `extracted_payload_${Date.now()}.bin`;
-        a.click();
-        URL.revokeObjectURL(url);
+        setShowPayloadModal(true);
       } else {
-        alert("No obvious appended payload found via simple signature analysis. Detailed extraction may require specific tool keys.");
+        alert("No obvious appended payload found. Structural or password-protected extractions require dedicated CLI tools (stegseek, binwalk) as detailed in the action recommendations.");
       }
     } finally {
       setExtracting(false);
@@ -1157,6 +1153,81 @@ export default function App() {
           </footer>
         </aside>
       </main>
+
+      {/* Payload Viewer Modal */}
+      <AnimatePresence>
+        {showPayloadModal && payloadPreview && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+             <motion.div 
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-brand-surface border border-brand-border rounded-xl p-6 max-w-4xl w-full h-[80vh] flex flex-col shadow-2xl relative"
+            >
+              <div className="flex items-center justify-between mb-4 border-b border-brand-border pb-4">
+                 <div>
+                    <h3 className="font-mono font-bold text-lg uppercase text-brand-success">RAW PAYLOAD EXTRACTED</h3>
+                    <p className="text-xs text-brand-text-s uppercase tracking-widest">{payloadPreview.length} BYTES ISOLATED FROM CARRIER</p>
+                 </div>
+                 <button onClick={() => setShowPayloadModal(false)} className="text-brand-text-s hover:text-white transition-colors">
+                    <X size={24} />
+                 </button>
+              </div>
+
+              <div className="flex-grow bg-[#09090b] rounded border border-brand-border overflow-hidden flex flex-col font-mono text-[10px] sm:text-[12px]">
+                 <div className="p-2 border-b border-brand-border bg-[#18181b] flex items-center gap-4 text-brand-text-s opacity-70">
+                    <span>OFFSET</span>
+                    <span>|</span>
+                    <span>HEX DUMP</span>
+                    <span>|</span>
+                    <span>ASCII PREVIEW</span>
+                 </div>
+                 <div className="p-4 overflow-y-auto flex-grow text-[#00ffcc] leading-relaxed custom-scrollbar whitespace-pre-wrap break-all">
+                    {(() => {
+                        const maxRender = 8192; // limit to prevent UI freezing
+                        const renderBytes = payloadPreview.slice(0, maxRender);
+                        let combined = "";
+
+                        for (let i = 0; i < renderBytes.length; i += 16) {
+                            const chunk = renderBytes.slice(i, i + 16);
+                            const hex = Array.from(chunk).map((b: number) => b.toString(16).padStart(2, '0')).join(' ');
+                            const ascii = Array.from(chunk).map((b: number) => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.').join('');
+                            combined += `${i.toString(16).padStart(8, '0')}  |  ${hex.padEnd(48, ' ')}  |  ${ascii}\n`;
+                        }
+                        
+                        if (payloadPreview.length > maxRender) {
+                           combined += `\n... [ TRUNCATED: ${payloadPreview.length - maxRender} BYTES OMITTED FOR UI PERF ] ...\n`;
+                        }
+                        return combined;
+                    })()}
+                 </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-4">
+                 <button 
+                   onClick={() => {
+                      const blob = new Blob([payloadPreview], { type: 'application/octet-stream' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `steg_payload_${Date.now()}.bin`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                   }}
+                   className="px-6 py-3 bg-brand-success text-black font-bold rounded uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+                 >
+                   DOWNLOAD RAW BINARY
+                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

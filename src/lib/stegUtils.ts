@@ -31,7 +31,9 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
   const slidingEntropyData = calculateSlidingEntropy(bytes);
 
   // 1. Structural Analysis (Checking for trailing data)
-  likelihood += checkTrailingData(bytes, file.type, findings);
+  if (file.type.startsWith('image/')) {
+    likelihood += checkImageTrailingData(bytes, file.type, findings);
+  }
 
   // 1.5 Signature Analysis for Steganography Tools
   likelihood += checkSignatureMarkers(bytes, file.type.toLowerCase(), findings);
@@ -50,14 +52,27 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
   }
 
   // 3. Statistical Analysis (Chi-Squared Test for LSB)
-  const chiSquaredResult = performChiSquared(bytes);
-  if (chiSquaredResult > 0.05) { // Adjusted threshold for non-randomness detection
+  const chiStat = performChiSquared(bytes);
+  
+  // High variance (Chi-Square > 6) means structure exists in LSBs indicating standard Steg techniques.
+  // Low variance (Chi-Square < 0.5) implies mathematical whitening, often used in Steghide.
+  // Video and Audio naturally have random LSBs so we'll only severely penalize text/image,
+  // OR severe uniformity.
+  const isVideoOrAudio = file.type.startsWith('video/') || file.type.startsWith('audio/');
+  if (chiStat < 0.2) { 
+    findings.push({
+      type: 'critical',
+      message: 'Unnatural LSB Uniformity (Cryptographic Masking)',
+      details: `Bit distribution is mathematically perfectly balanced (Chi-Stat=${chiStat.toFixed(3)}). This perfect parity strongly indicates encrypted payload injection (e.g., OpenPuff).`
+    });
+    likelihood += 45;
+  } else if (!isVideoOrAudio && chiStat > 6.63) {
     findings.push({
       type: 'warning',
-      message: 'Statistical anomaly detected (Chi-Squared)',
-      details: `LSB distribution appears non-random (p=${chiSquaredResult.toFixed(4)}), suggestive of structured hidden data. RECOMMENDED ACTION: Use 'zsteg' for LSB extraction or 'stegoveritas' for multi-method analysis.`
+      message: 'High-confidence statistical bias',
+      details: `LSB terminal distribution deviates significantly from natural noise (Chi-Stat=${chiStat.toFixed(2)}).`
     });
-    likelihood += 25;
+    likelihood += 30;
   }
   
   // 3.5 DeepSound / Audio Specific Signature Checks
@@ -69,7 +84,7 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
   // 4. Steghide Heuristics
   const isSteghideFormat = ['image/jpeg', 'image/bmp', 'audio/wav', 'audio/x-wav'].includes(file.type.toLowerCase()) || file.name.endsWith('.au');
   if (isSteghideFormat && entropy > 7.9) {
-      if (chiSquaredResult < 0.1) {
+      if (chiStat < 2.0) { // High randomness (unbiased) characteristic of Graph-Theoretic masking
           findings.push({
             type: 'critical',
             message: 'Steghide Graph-Theoretic Masking',
@@ -96,19 +111,152 @@ export async function analyzeFile(file: File): Promise<AnalysisResult> {
     findings,
     metadata: {
       entropy: entropy.toFixed(4),
-      chiSquared: chiSquaredResult.toFixed(4),
+      chiSquared: chiStat.toFixed(4),
       byteDistribution: entropyData.byteDistribution,
       slidingEntropy: slidingEntropyData
     },
-    suggestions: [
-      "Review the Bit-Plane visualizer for snowy patterns",
-      "Check the forensic log for trailing data offsets",
-      "AI suggests looking for password-protected segments if entropy is near 8.0"
-    ]
+    suggestions: generateRecommendations(file.type || 'unknown', likelihood, findings, entropy)
   };
 }
 
-function checkTrailingData(bytes: Uint8Array, mimeType: string, findings: Finding[]): number {
+function generateRecommendations(mimeType: string, likelihood: number, findings: Finding[], entropy: number): string[] {
+  const suggestions: string[] = [];
+  const lowerMime = mimeType.toLowerCase();
+  
+  const hasTrailing = findings.some(f => f.message.toLowerCase().includes('trailing') || f.message.toLowerCase().includes('appended'));
+  const isOpenPuff = findings.some(f => f.message.toLowerCase().includes('openpuff') || f.message.toLowerCase().includes('padding') || f.message.toLowerCase().includes('uniformity'));
+  const isSteghide = findings.some(f => f.message.toLowerCase().includes('steghide'));
+  const isLsb = findings.some(f => f.message.toLowerCase().includes('lsb'));
+  const isDeepSound = findings.some(f => f.message.toLowerCase().includes('deepsound'));
+
+  if (likelihood < 20) {
+    suggestions.push("File structure and statistics appear nominal. No immediate forensic action required.");
+    if (entropy > 7.9 && (lowerMime.includes('video') || lowerMime.includes('audio'))) {
+       suggestions.push("Note: The high byte entropy observed is mathematically consistent with natural media compression (e.g. standard H.264/AAC wrappers).");
+    }
+    if (lowerMime.includes('image')) {
+       suggestions.push("Visual bit-plane inspection is recommended as a final manual verification step.");
+    }
+  } else {
+    // Infiltrated or Suspicious tailored suggestions
+    if (isOpenPuff) {
+       suggestions.push("Cryptographic packaging detected (e.g., OpenPuff). Extraction requires the original encryption keys or brute-force attempts on the carrier structure.");
+    }
+    if (hasTrailing) {
+       suggestions.push("Appended payload identified. Recommended action: Use 'binwalk -e <filename>' or 'foremost -i <filename>' in a Linux forensics environment to automatically strip and extract the trailing bytes.");
+    }
+    if (isSteghide) {
+       suggestions.push("Steghide graph-theoretic masking suspected. Recommended action: Run 'stegseek <filename> wordlist.txt' to attempt rapid dictionary cracking.");
+    }
+    if (isLsb && lowerMime.includes('image')) {
+       suggestions.push("Review the visual Bit-Plane Analyzer map for localized snowy patterns, which usually map the physical dimensions of the concealed hidden data.");
+    }
+    if (isDeepSound || lowerMime.includes('audio')) {
+       suggestions.push("If DeepSound or silent bit-stream injection is suspected in the audio carrier, process the file with the native DeepSound application to scan for password-protected secrets.");
+    }
+    
+    // Add a generic fallback if we didn't add specific tool ones but likelihood is high
+    if (suggestions.length === 0) {
+       suggestions.push("Anomalies detected. Subject the file to advanced forensic sandboxing to safely isolate embedded structures.");
+    }
+  }
+  
+  return suggestions;
+}
+
+// MP4 Structural Steganography Scanner (e.g. OpenPuff)
+function analyzeMP4StructuralAnomalies(bytes: Uint8Array, findings: Finding[]): number {
+  let score = 0;
+  let offset = 0;
+  
+  while (offset < bytes.length && bytes[offset] === 0) offset++;
+
+  try {
+    const decoder = new TextDecoder();
+    while (offset + 8 <= bytes.length) {
+      // Correctly compute 32-bit Unsigned Integer (JavaScript bitwise converts >= 2GB to negative)
+      let size = (bytes[offset] * 16777216) + (bytes[offset + 1] << 16) + (bytes[offset + 2] << 8) + bytes[offset + 3];
+      const type = decoder.decode(bytes.slice(offset + 4, offset + 8));
+
+      // MP4 boxes use printable ASCII. If it hits encrypted payload or garbage headers, it breaks
+      if (!/^[\x20-\x7E]{4}$/.test(type)) {
+         break;
+      }
+
+      let headerSize = 8;
+      if (size === 1) { 
+        if (offset + 16 > bytes.length) break;
+        let bigSize = 0n;
+        for (let i = 0; i < 8; i++) {
+          bigSize = (bigSize << 8n) | BigInt(bytes[offset + 8 + i]);
+        }
+        size = Number(bigSize);
+        headerSize = 16;
+      } else if (size === 0) {
+        size = bytes.length - offset;
+      }
+
+      if (size < headerSize) break;
+      const payloadSize = size - headerSize;
+      
+      // Target OpenPuff specific vectors:
+      // Scrutinize ALL atoms except the massive native media data stream ('mdat')
+      if (type !== 'mdat' && payloadSize > 256) {
+          const sampleSize = Math.min(payloadSize, 512 * 1024);
+          const payloadSample = bytes.slice(offset + headerSize, offset + headerSize + sampleSize);
+          const atomEntropy = calculateEntropy(payloadSample);
+          
+          if (atomEntropy > 7.95) {
+             findings.push({
+               type: 'critical',
+               message: `Encrypted Payload in '${type}' box`,
+               details: `Atom '${type}' contains mathematically whitened data (H=${atomEntropy.toFixed(4)}). Natural metadata boxes never reach theoretical maximum entropy.`
+             });
+             score += 85;
+          } else if ((type === 'free' || type === 'skip' || type === 'junk') && atomEntropy > 6.0) {
+             findings.push({
+               type: 'critical',
+               message: `Malicious Padding Injection ('${type}' box)`,
+               details: `Found a padding atom containing highly randomized data (H=${atomEntropy.toFixed(4)}). Standard filler boxes consist of 0x00 bytes.`
+             });
+             score += 75;
+          }
+      }
+
+      offset += size;
+      if (offset < 0) break; // Infinite loop safety
+    }
+    
+    // Handle Appended Cryptographic Data 
+    if (offset > 0 && offset < bytes.length - 16) {
+       const tail = bytes.slice(offset);
+       const tailEntropy = calculateEntropy(tail);
+       if (tailEntropy > 7.8) {
+          findings.push({
+            type: 'critical',
+            message: `Appended Cryptographic Payload (${formatSize(tail.length)})`,
+            details: `Found highly dense out-of-bounds data appended past the MP4 logical EOF (H=${tailEntropy.toFixed(4)}).`
+          });
+          score += 85;
+       }
+    }
+  } catch (e) {
+    // Graceful exit for corrupted offsets
+  }
+  
+  return score;
+}
+
+function analyzeVideoAdvanced(bytes: Uint8Array, findings: Finding[]): number {
+  let score = 0;
+  
+  // Specific check for OpenPuff MP4 architectural injections
+  score += analyzeMP4StructuralAnomalies(bytes, findings);
+  
+  return score;
+}
+
+function checkImageTrailingData(bytes: Uint8Array, mimeType: string, findings: Finding[]): number {
   let score = 0;
   let footerPos = -1;
   let footerLen = 0;
@@ -119,35 +267,8 @@ function checkTrailingData(bytes: Uint8Array, mimeType: string, findings: Findin
   } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
     footerPos = findLastSequence(bytes, JPEG_FOOTER);
     footerLen = 2;
-  } else if (mimeType.includes('mp4') || mimeType.includes('video/quicktime')) {
-    footerPos = findLastSequence(bytes, MP4_MOOV);
-    if (footerPos !== -1) {
-      // Find the end of the moov atom (simplified)
-      const moovSize = (bytes[footerPos-4] << 24) | (bytes[footerPos-3] << 16) | (bytes[footerPos-2] << 8) | bytes[footerPos-1];
-      if (moovSize > 0 && (footerPos - 4 + moovSize) < bytes.length) {
-        footerPos = footerPos - 4;
-        footerLen = moovSize;
-      } else {
-        footerPos = -1;
-      }
-    }
   }
-
-  // OpenPuff check for videos (OpenPuff adds a 512-byte header/mark or appends)
-  if (footerPos === -1 && (mimeType.includes('video') || mimeType.includes('audio'))) {
-    // Check if the entropy of the last 1MB is suspiciously high
-    const tailSize = Math.min(bytes.length, 1024 * 1024);
-    const tailEntropy = calculateEntropy(bytes.slice(-tailSize));
-    if (tailEntropy > 7.9) {
-      findings.push({
-        type: 'critical',
-        message: 'High entropy in file terminal detected',
-        details: 'Random data at the end of a media stream is highly indicative of encrypted steganography like OpenPuff.'
-      });
-      score += 40;
-    }
-  }
-
+  
   if (footerPos !== -1 && (footerPos + footerLen) < bytes.length - 16) {
     const extra = bytes.length - (footerPos + footerLen);
     findings.push({
@@ -217,16 +338,6 @@ function analyzeImageAdvanced(bytes: Uint8Array, mimeType: string, findings: Fin
   return score;
 }
 
-function analyzeVideoAdvanced(bytes: Uint8Array, findings: Finding[]): number {
-  let score = 0;
-  // Video-specific entropy and signature checks can be grouped here, along with framewise decoding if implemented
-  // Note: OpenPuff signature is now handled by the global checkSignatureMarkers
-  const entropy = calculateEntropy(bytes);
-  if (entropy > 7.95) {
-     score += 20;
-  }
-  return score;
-}
 
 function analyzeAudioAdvanced(bytes: Uint8Array, findings: Finding[]): number {
   let score = 0;
@@ -388,13 +499,15 @@ function analyzeTextAdvanced(text: string, findings: Finding[]): number {
 
 function performChiSquared(bytes: Uint8Array): number {
   const freqs = [0, 0];
+  
   for (let i = 0; i < bytes.length; i++) {
     freqs[bytes[i] & 1]++;
   }
   const expected = bytes.length / 2;
   if (expected === 0) return 0;
-  const chiSq = Math.pow(freqs[0] - expected, 2) / expected + Math.pow(freqs[1] - expected, 2) / expected;
-  return Math.min(1, chiSq / 10);
+  
+  const chiSq = (Math.pow(freqs[0] - expected, 2) / expected) + (Math.pow(freqs[1] - expected, 2) / expected);
+  return chiSq;
 }
 
 export function extractPayload(bytes: Uint8Array, mimeType: string): Uint8Array | null {
@@ -408,14 +521,52 @@ export function extractPayload(bytes: Uint8Array, mimeType: string): Uint8Array 
     footerPos = findLastSequence(bytes, JPEG_FOOTER);
     footerLen = 2;
   } else if (mimeType.includes('mp4') || mimeType.includes('video/quicktime')) {
-    footerPos = findLastSequence(bytes, MP4_MOOV);
-    if (footerPos !== -1) {
-       const moovSize = (bytes[footerPos-4] << 24) | (bytes[footerPos-3] << 16) | (bytes[footerPos-2] << 8) | bytes[footerPos-1];
-       if (moovSize > 0) {
-         footerPos = footerPos - 4;
-         footerLen = moovSize;
-       }
-    }
+    // Implement structural extraction based on our MP4 analyzer
+    let offset = 0;
+    while (offset < bytes.length && bytes[offset] === 0) offset++;
+    try {
+      const decoder = new TextDecoder();
+      while (offset + 8 <= bytes.length) {
+        let size = (bytes[offset] * 16777216) + (bytes[offset + 1] << 16) + (bytes[offset + 2] << 8) + bytes[offset + 3];
+        const type = decoder.decode(bytes.slice(offset + 4, offset + 8));
+
+        if (!/^[\x20-\x7E]{4}$/.test(type)) break;
+
+        let headerSize = 8;
+        if (size === 1) { 
+          if (offset + 16 > bytes.length) break;
+          let bigSize = 0n;
+          for (let i = 0; i < 8; i++) {
+            bigSize = (bigSize << 8n) | BigInt(bytes[offset + 8 + i]);
+          }
+          size = Number(bigSize);
+          headerSize = 16;
+        } else if (size === 0) {
+          size = bytes.length - offset;
+        }
+
+        if (size < headerSize) break;
+        const payloadSize = size - headerSize;
+
+        // If we found malicious padding/boxes via high entropy
+        if (type !== 'mdat' && payloadSize > 256) {
+           const atomSample = bytes.slice(offset + headerSize, offset + headerSize + Math.min(payloadSize, 512 * 1024));
+           const atomEntropy = calculateEntropy(atomSample);
+           if (atomEntropy > 7.5 || ((type === 'free' || type === 'skip' || type === 'junk') && atomEntropy > 6.0)) {
+               // Extract this box's raw contents
+               return bytes.slice(offset + headerSize, offset + size);
+           }
+        }
+
+        offset += size;
+        if (offset < 0) break;
+      }
+      
+      // If we cleanly broke out but there is appended trailing payload data
+      if (offset > 0 && offset < bytes.length - 16) {
+         return bytes.slice(offset);
+      }
+    } catch(e) {}
   }
 
   if (footerPos !== -1 && (footerPos + footerLen) < bytes.length) {
