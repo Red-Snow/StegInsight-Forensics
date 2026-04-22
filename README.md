@@ -14,8 +14,7 @@
 
 The easiest way to use **StegInsight Forensics** is through our live web application. No coding or installation is required!
 
-**Live App URL:** [https://ais-pre-rpvochh3ls43tfhuul5oj4-397660586580.asia-southeast1.run.app](https://ais-pre-rpvochh3ls43tfhuul5oj4-397660586580.asia-southeast1.run.app)
-*(Note: As the project evolves, you can also access it at [Red-Snow GitHub Pages](https://Red-Snow.github.io/StegInsight-Forensics))*
+**Live App URL:** 👉 **[https://red-snow.github.io/StegInsight-Forensics/](https://red-snow.github.io/StegInsight-Forensics/)**
 
 ### Step-by-Step Guide for New Users:
 
