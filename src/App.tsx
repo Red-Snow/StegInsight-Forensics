@@ -836,39 +836,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Payload Visualization */}
-          <AnimatePresence>
-            {payloadPreview && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-brand-surface border border-brand-accent/30 p-5 rounded-lg overflow-hidden"
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[11px] font-bold tracking-widest text-brand-accent flex items-center gap-2">
-                    <Zap size={14} /> PAYLOAD RECONSTRUCTION
-                  </h3>
-                  <button onClick={() => setPayloadPreview(null)} className="text-[10px] text-brand-text-s hover:text-white transition-colors">CLOSE</button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Hex View */}
-                  <div className="space-y-3">
-                    <h4 className="text-[9px] uppercase text-brand-text-s font-bold">Raw Memory Dump (First 256b)</h4>
-                    <div className="font-mono text-[9px] bg-black p-3 rounded border border-brand-border text-brand-text-p grid grid-cols-8 gap-x-2 leading-tight">
-                      {Array.from(payloadPreview.slice(0, 128)).map((b: number, i: number) => (
-                        <div key={i} className={b !== 0 ? 'text-brand-accent' : 'opacity-20'}>
-                          {(b < 16 ? '0' : '') + b.toString(16).toUpperCase()}
-                        </div>
-                      ))}
-                      {payloadPreview.length > 128 && <div className="col-span-8 text-center py-2 opacity-50 tracking-[5px]">...</div>}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Interactive Visualizations Block */}
           {result && (
               <div className="bg-[#0d1117] border border-brand-border rounded-lg overflow-hidden mt-2">
@@ -1147,6 +1114,15 @@ export default function App() {
                              <div className="text-[10px] font-bold text-brand-success uppercase">KEY RECOVERED</div>
                              <div className="text-[14px] font-mono font-bold text-black bg-brand-success px-2 py-1 rounded select-all break-all text-center">{crackedPassword}</div>
                          </div>
+                     )}
+                     
+                     {!showPayloadModal && (
+                        <button 
+                            className="w-full py-2 bg-brand-surface border border-brand-border text-brand-text-p hover:text-white hover:border-brand-accent transition-colors font-bold rounded uppercase tracking-widest text-[9px] cursor-pointer mt-2" 
+                            onClick={() => setShowPayloadModal(true)}
+                        >
+                            VIEW HEX DUMP
+                        </button>
                      )}
                  </div>
              )}
