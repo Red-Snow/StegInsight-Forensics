@@ -88,6 +88,7 @@ class AnalysisReport:
                 "offsets": self.entropy_offsets,
                 "values": [round(v, 4) for v in self.entropy_values],
                 "printable_ratio": round(self.printable_ratio, 5),
+                "histogram": self.histogram,
             },
             "structure": [n.to_dict() for n in self.structure],
             "carved": [c.to_dict() for c in self.carved],

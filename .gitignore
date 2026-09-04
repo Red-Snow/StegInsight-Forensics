@@ -13,3 +13,7 @@ htmlcov/
 coverage.xml
 .DS_Store
 *.log
+
+# built by the pages workflow, not committed
+web/*.whl
+web/wheel.json

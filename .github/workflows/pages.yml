@@ -1,0 +1,54 @@
+name: Deploy live app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'steginsight/**'
+      - 'pyproject.toml'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The wheel the browser installs is built from this commit's source, so
+      # the live app can never drift from the repository it claims to be.
+      - name: Build the wheel the browser will run
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+          cp dist/*.whl web/
+          WHEEL=$(basename dist/*.whl)
+          printf '{"file":"%s","commit":"%s"}\n' "$WHEEL" "$GITHUB_SHA" > web/wheel.json
+          echo "Publishing $WHEEL"
+
+      - name: Sanity-check the payload
+        run: |
+          test -f web/index.html
+          test -f web/wheel.json
+          ls web/*.whl >/dev/null
+          ls web/samples/*.png >/dev/null
+          echo "web/ contents:"; ls -la web/
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: web
+          branch: gh-pages
+          clean: true

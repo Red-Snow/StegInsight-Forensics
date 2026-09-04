@@ -6,6 +6,11 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab.svg)](https://www.python.org/)
 [![Tests](https://github.com/Red-Snow/StegInsight-Forensics/actions/workflows/ci.yml/badge.svg)](https://github.com/Red-Snow/StegInsight-Forensics/actions/workflows/ci.yml)
 
+**▶ Try it in your browser — no install:
+[red-snow.github.io/StegInsight-Forensics](https://red-snow.github.io/StegInsight-Forensics/)**
+The full engine is compiled to WebAssembly and runs inside the page, so your files are never
+uploaded anywhere.
+
 StegInsight examines images, audio, video containers, documents and text for concealed
 payloads. It reports a calibrated probability with every contributing measurement shown,
 recovers embedded objects that are actually present, and states plainly what it could
@@ -48,6 +53,23 @@ $ steginsight scan evidence.png
 ```
 
 ---
+
+## Use it in the browser
+
+<https://red-snow.github.io/StegInsight-Forensics/>
+
+Drag a file in and you get the same analysis the CLI gives — the identical Python package,
+compiled to WebAssembly via Pyodide, running locally in the tab. Not a reimplementation: the
+wheel the page installs is built from this repository's source on every push, so the live app
+cannot drift from the code here.
+
+Everything the CLI does is there: the verdict with its evidence, bit-plane imagery, entropy and
+χ² charts, container structure, recovered payloads with a hex view, and downloadable HTML/JSON
+reports. Drop several files at once to triage them together.
+
+**Nothing is uploaded.** There is no server and no upload endpoint. Open DevTools → Network:
+after the engine loads, dropping a file produces no requests at all. The trade is a one-time
+~20 MB engine download, cached afterwards.
 
 ## Install
 
@@ -124,6 +146,14 @@ StegInsight ships its own **baseline JPEG entropy decoder** (`steginsight/jpegdc
 ~250 lines, no libjpeg binding required) that recovers quantised coefficients directly
 from the scan. It is validated in the test-suite by dequantising, running an inverse DCT
 and comparing against libjpeg's own decode of the same file.
+
+### In the browser
+
+The same package runs under Pyodide. `steginsight/web.py` is the only bridge, and it is covered
+by the test-suite rather than being untested JavaScript glue. SciPy was dropped as a runtime
+dependency for this — the two functions used from it were both `chi2.sf`, now implemented in
+`core/_special.py` and verified against SciPy to a relative tolerance of 1e-9, which removes a
+~15 MB WebAssembly download.
 
 ### Audio, text and identity
 

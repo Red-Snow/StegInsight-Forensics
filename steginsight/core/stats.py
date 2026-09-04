@@ -12,7 +12,8 @@ from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy import stats as sps
+
+from ._special import chi2_sf
 
 __all__ = [
     "ChiSquareResult",
@@ -172,7 +173,7 @@ def _chi_square_from_histogram(counts: NDArray[np.int64]) -> ChiSquareResult | N
     return ChiSquareResult(
         statistic=statistic,
         degrees_of_freedom=dof,
-        p_value=float(sps.chi2.sf(statistic, dof)),
+        p_value=chi2_sf(statistic, dof),
         usable_bins=int(usable.sum()),
     )
 

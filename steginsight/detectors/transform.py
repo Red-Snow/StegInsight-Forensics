@@ -35,8 +35,8 @@ from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy import stats as sps
 
+from ..core._special import chi2_sf
 from ..core.evidence import Evidence, Family, Severity
 from ..jpegdct import JpegScan, UnsupportedJpeg, decode_coefficients
 
@@ -173,7 +173,7 @@ def _dct_chi_square(ac: NDArray[np.int32]) -> float | None:
     diff = even[usable_bins] - totals[usable_bins] / 2.0
     statistic = float((2.0 * diff * diff / totals[usable_bins]).sum())
     dof = int(usable_bins.sum()) - 1
-    return float(sps.chi2.sf(statistic, dof))
+    return chi2_sf(statistic, dof)
 
 
 def _dct_chi_square_curve(
@@ -216,7 +216,7 @@ def _dct_chi_square_curve(
             continue
         diff = even[mask] - totals[mask] / 2.0
         statistic = float((2.0 * diff * diff / totals[mask]).sum())
-        out.append(float(sps.chi2.sf(statistic, int(mask.sum()) - 1)))
+        out.append(chi2_sf(statistic, int(mask.sum()) - 1))
     return out
 
 
@@ -322,7 +322,7 @@ def _benford_test(ac: NDArray[np.int32]) -> float | None:
     expected = expected / expected.sum() * total
 
     statistic = float((((observed - expected) ** 2) / expected).sum())
-    return float(sps.chi2.sf(statistic, 8))
+    return chi2_sf(statistic, 8)
 
 
 def _estimate_quality(scan: JpegScan) -> int | None:
