@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: macos-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type-check
+        run: mypy steginsight
+
+      - name: Test
+        run: pytest --cov=steginsight --cov-report=term-missing --cov-report=xml
+
+      - name: Smoke-test the CLI
+        shell: bash
+        run: |
+          python -c "
+          from tests.factories import natural_image, png_bytes, zip_bytes, append_payload
+          open('clean.png','wb').write(png_bytes(natural_image(seed=1)))
+          open('embedded.png','wb').write(append_payload(png_bytes(natural_image(seed=1)), zip_bytes()))
+          "
+          steginsight --version
+          steginsight scan clean.png --no-colour;    test $? -eq 0
+          steginsight scan embedded.png --no-colour; test $? -eq 3
+          steginsight scan embedded.png -q --html report.html --json result.json
+          test -s report.html && test -s result.json
+          steginsight triage . --no-colour || true
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
